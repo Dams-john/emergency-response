@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Emergency</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>body { padding: 50px; }</style>
+</head>
+<body class="bg-light text-center">
+    <div class="container">
+        <h2>🚨 Emergency Reporter</h2>
+        <select id="caseType" class="form-select w-50 mx-auto mb-3">
+            <option selected disabled>Select Emergency Type</option>
+            <option value="Fire">🔥 Fire</option>
+            <option value="Medical">🏥 Medical</option>
+            <option value="Robbery">💰 Robbery</option>
+            <option value="Accident">🚗 Accident</option>
+            <option value="Other">⚠️ Other</option>
+        </select>
+        <button onclick="sendAlert()" class="btn btn-danger btn-lg">Send Emergency</button>
+        <audio id="siren" src="https://www.soundjay.com/misc/sounds/emergency-siren-01.mp3" preload="auto"></audio>
+    </div>
+    <a href="admin.html">..</a>
+    <script>
+    const channel = new BroadcastChannel("emergency_alerts");
+
+    function sendAlert() {
+        const caseType = document.getElementById("caseType").value;
+        if (!caseType) return alert("Please select a case type.");
+
+        document.getElementById("siren").play();
+
+        navigator.geolocation.getCurrentPosition(async position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+            const data = await res.json();
+            const address = data.display_name || "Unknown Location";
+
+            const alert = {
+                caseType,
+                lat,
+                lon,
+                address,
+                time: new Date().toLocaleString()
+            };
+
+            channel.postMessage(alert);
+            alert("Emergency sent!");
+        });
+    }
+    </script>
+</body>
+</html>
